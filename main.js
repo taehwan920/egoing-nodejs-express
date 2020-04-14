@@ -9,6 +9,7 @@ const qs = require('querystring');
 
 const app = express();
 
+app.use(express.static('public'))
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(compression());
 app.get('*', (req, res, next) => {
@@ -24,31 +25,37 @@ app.get('/', (req, res) => {
   var description = 'Hello, Node.js';
   var list = template.list(req.list);
   var html = template.HTML(title, list,
-    `<h2>${title}</h2>${description}`,
+    `<h2>${title}</h2>${description}
+    <img src="/images/hello.jpg" style="width:300px; display:block; margin-top:10px;">
+    `,
     `<a href="/create">create</a>`
   );
   res.send(html);
 });
 
-app.get('/page/:pageId', (req, res) => {
+app.get('/page/:pageId', (req, res, next) => {
   var filteredId = path.parse(req.params.pageId).base;
   fs.readFile(`data/${filteredId}`, 'utf8', function (err, description) {
-    var title = req.params.pageId;
-    var sanitizedTitle = sanitizeHtml(title);
-    var sanitizedDescription = sanitizeHtml(description, {
-      allowedTags: ['h1']
-    });
-    var list = template.list(req.list);
-    var html = template.HTML(sanitizedTitle, list,
-      `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
-      ` <a href="/create">create</a>
+    if (!err) {
+      var title = req.params.pageId;
+      var sanitizedTitle = sanitizeHtml(title);
+      var sanitizedDescription = sanitizeHtml(description, {
+        allowedTags: ['h1']
+      });
+      var list = template.list(req.list);
+      var html = template.HTML(sanitizedTitle, list,
+        `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
+        ` <a href="/create">create</a>
           <a href="/update/${sanitizedTitle}">update</a>
           <form action="delete_process" method="post">
             <input type="hidden" name="id" value="${sanitizedTitle}">
             <input type="submit" value="delete">
           </form>`
-    );
-    res.send(html);
+      );
+      res.send(html);
+    } else {
+      next(err);
+    }
   });
 });
 
@@ -122,6 +129,13 @@ app.post('/page/delete_process', (req, res) => {
   fs.unlink(`data/${filteredId}`, function (error) {
     res.redirect('/');
   })
+});
+
+app.use((req, res, next) => res.status(404).send('Sorry cant find that!'));
+
+app.use((err, req, res, next) => {
+  console.error(err.stack)
+  res.status(500).send('something broke!')
 });
 
 app.listen(3000, () => console.log('Example app listening on port 3000!'))
