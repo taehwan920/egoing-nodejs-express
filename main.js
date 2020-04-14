@@ -2,13 +2,15 @@ const bodyParser = require('body-parser');
 const compression = require('compression');
 const fs = require('fs');
 const express = require('express');
+const helmet = require('helmet');
 const template = require('./lib/template.js');
 const topicRouters = require('./routers/topicRouters');
 const homeRouters = require('./routers/homeRouters');
 
 const app = express();
 
-app.use(express.static('public'))
+app.use(helmet());
+app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(compression());
 app.get('*', (req, res, next) => {
