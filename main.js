@@ -1,6 +1,7 @@
 const bodyParser = require('body-parser');
-const express = require('express');
+const compression = require('compression');
 const fs = require('fs');
+const express = require('express');
 const template = require('./lib/template.js');
 const path = require('path');
 const sanitizeHtml = require('sanitize-html');
@@ -9,6 +10,7 @@ const qs = require('querystring');
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(compression());
 
 app.get('/', (req, res) => {
   fs.readdir('./data', function (error, filelist) {
@@ -67,22 +69,6 @@ app.get('/create', (req, res) => {
 })
 
 app.post('/create_process', (req, res) => {
-
-  /*
-  var body = '';
-  req.on('data', function (data) {
-    body = body + data;
-  });
-  req.on('end', function () {
-    var post = qs.parse(body);
-    var title = post.title;
-    var description = post.description;
-    fs.writeFile(`data/${title}`, description, 'utf8', function (err) {
-      res.redirect('/')
-    })
-  });
-  */
-
   var post = req.body;
   var title = post.title;
   var description = post.description;
